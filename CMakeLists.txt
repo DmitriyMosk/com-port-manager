@@ -2,13 +2,12 @@ cmake_minimum_required(VERSION 3.30)
 
 project(com-port-manager LANGUAGES CXX)
 
-# init sets
-set(PJ_INCLUDE_DIR, "include")
-set(PJ_MODULES_DIR, "src/modules")
+set(PJ_INCLUDE_DIR "include")
+set(PJ_MODULES_DIR "src/modules")
 
 ## modules 
-set(PJ_MODULE_COM_API, "com-api")
-set(PJ_MODULE_TERM_IO, "term-io")
+set(PJ_MODULE_COM_API "com-api")
+set(PJ_MODULE_TERM_IO "term-io")
 
 ## compiler check
 find_program(CMAKE_CXX_COMPILER NAMES g++)
@@ -24,13 +23,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${PJ_INCLUDE_DIR})
 
-add_subdirectory(${PJ_MODULES_DIR}/${PJ_MODULE_COM_API} ${CMAKE_BINARY_DIR}/src/modules/com-api)
-add_subdirectory(${PJ_MODULES_DIR}/${PJ_MODULE_TERM_IO} ${CMAKE_BINARY_DIR}/src/modules/com-api)
+add_subdirectory(${PJ_MODULES_DIR}/${PJ_MODULE_COM_API} ${CMAKE_BINARY_DIR}/src/modules/com-api-build)
+add_subdirectory(${PJ_MODULES_DIR}/${PJ_MODULE_TERM_IO} ${CMAKE_BINARY_DIR}/src/modules/term-io-build)
 
 file(GLOB SOURCES "src/main.cpp")
 
 add_executable(com-port-manager ${SOURCES})
-target_link_libraries(com-port-manager ${PJ_MODULE_COM_API} ${PJ_MODULE_TERM_IO})
+target_link_libraries(com-port-manager com-api term-io setupapi)
 
 # enable_testing()
 # add_subdirectory(tests)

@@ -1,26 +1,28 @@
 #include <windows.h>
-
-#include <setupapi.h>
-#include <devguid.h>
-#include <regstr.h>
-#include <iostream>
-#include <vector>
 #include <string>
+#include <stdexcept>
+#include <tchar.h>
+#include <vector>
 
 #ifndef MODULES_COM_API_HPP
-#define MODULES_COM_API_HPP 
+#define MODULES_COM_API_HPP
     
     namespace modules::com_api {
-
-        struct ComPortInfo {
-            std::string portName;
+        struct PortData {
+            HANDLE descriptor;
             std::string friendlyName;
+            int systemId;
+            bool accept;
         };
 
-        std::vector<ComPortInfo> scanPorts();
+        std::string ConvertIDToPortName(int id);
 
-        // HANDLE openPort(const std::string& portName, DWORD baudRate);
-
+        std::vector<PortData> ScanPorts();
+        
+        PortData GetPortBySystemId(int systemId);
+        
+        HANDLE openPort(const std::string& portName, DWORD baudRate);
+        
         // void closePort(HANDLE hCom);
 
         // bool readFromPort(HANDLE hCom, char* buffer, DWORD bufferSize, DWORD& bytesRead);

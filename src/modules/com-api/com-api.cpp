@@ -1,70 +1,67 @@
 #include "com-api.hpp"
 
+#include <sstream>
+#include <iostream>
+
 namespace modules::com_api {
+    std::string ConvertIDToPortName(int id) {
+        std::stringstream portName("\\\\.\\COM");
 
-    std::vector<ComPortInfo> scanPorts() {
-        std::vector<ComPortInfo> comPorts;
-        HDEVINFO deviceInfoSet = SetupDiGetClassDevs(&GUID_DEVCLASS_PORTS, nullptr, nullptr, DIGCF_PRESENT);
-        if (deviceInfoSet == INVALID_HANDLE_VALUE) {
-            return comPorts;
-        }
+        portName << id; 
 
-        SP_DEVINFO_DATA deviceInfoData;
-        deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
-
-        for (DWORD i = 0; SetupDiEnumDeviceInfo(deviceInfoSet, i, &deviceInfoData); ++i) {
-            char portName[256];
-            char friendlyName[256];
-
-            if (SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_FRIENDLYNAME, nullptr, (PBYTE)friendlyName, sizeof(friendlyName), nullptr) &&
-                SetupDiGetDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, nullptr, (PBYTE)portName, sizeof(portName), nullptr)) {
-                comPorts.push_back({portName, friendlyName});
-            }
-        }
-
-        SetupDiDestroyDeviceInfoList(deviceInfoSet);
-        return comPorts;
+        return portName.str();
     }
 
-    // HANDLE openPort(const std::string& portName, DWORD baudRate) {
-    //     std::wstring widePortName(portName.begin(), portName.end());
-    //     HANDLE hCom = CreateFile(widePortName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-    //     if (hCom == INVALID_HANDLE_VALUE) {
-    //         return INVALID_HANDLE_VALUE;
-    //     }
+    std::vector<PortData> ScanPorts() {
+        std::vector<PortData> ports;
+        char targetPath[5000];
+        
+        for (int i = 1; i < 256; i++) {
+            std::string portName = ConvertIDToPortName(i); 
 
-    //     DCB dcb;
-    //     SecureZeroMemory(&dcb, sizeof(DCB));
-    //     dcb.DCBlength = sizeof(DCB);
+            HANDLE hComm = CreateFileA(portName.c_str(), 
+                GENERIC_READ | GENERIC_WRITE,
+                0,
+                0,
+                OPEN_EXISTING,
+                0,
+                0);
 
-    //     if (!GetCommState(hCom, &dcb)) {
-    //         CloseHandle(hCom);
-    //         return INVALID_HANDLE_VALUE;
-    //     }
+            if (hComm != INVALID_HANDLE_VALUE) {
+                PortData port;
+                port.descriptor = hComm;
+                port.systemId = i;
+                
+                QueryDosDeviceA(&portName[4], targetPath, 5000);
+                port.friendlyName = std::string(targetPath);
+                
+                ports.push_back(port);
+                CloseHandle(hComm);
+            } 
+        }
+        return ports;
+    }
 
-    //     dcb.BaudRate = baudRate;
-    //     dcb.ByteSize = 8;
-    //     dcb.StopBits = ONESTOPBIT;
-    //     dcb.Parity = NOPARITY;
+    PortData GetPortBySystemId(int systemId) {
+        PortData port; 
 
-    //     if (!SetCommState(hCom, &dcb)) {
-    //         CloseHandle(hCom);
-    //         return INVALID_HANDLE_VALUE;
-    //     }
+        std::string portName = ConvertIDToPortName(systemId); 
 
-    //     return hCom;
-    // }
+        HANDLE hComm = CreateFileA(portName.c_str(), 
+            GENERIC_READ | GENERIC_WRITE,
+            0,
+            0,
+            OPEN_EXISTING,
+            0,
+            0);
 
-    // void closePort(HANDLE hCom) {
-    //     CloseHandle(hCom);
-    // }
+        port.systemId = systemId;
+        port.accept = hComm != INVALID_HANDLE_VALUE; 
+        port.descriptor = hComm;
+        port.friendlyName = port.accept ? ConvertIDToPortName(systemId) : "Port not found";
+        
+        return port;
+    }
 
-    // bool readFromPort(HANDLE hCom, char* buffer, DWORD bufferSize, DWORD& bytesRead) {
-    //     return ReadFile(hCom, buffer, bufferSize, &bytesRead, nullptr);
-    // }
-
-    // bool writeToPort(HANDLE hCom, const char* buffer, DWORD bufferSize, DWORD& bytesWritten) {
-    //     return WriteFile(hCom, buffer, bufferSize, &bytesWritten, nullptr);
-    // }
-
+    //PortData GetPortFD
 }
