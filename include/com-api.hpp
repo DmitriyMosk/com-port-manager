@@ -21,7 +21,7 @@
         PORT_NOT_AVAILABLE 
     };
     
-    // Generic access rights
+    // Generic access rights (wrapper)
     #define COM_API_GENERIC_RWRD    (GENERIC_READ | GENERIC_WRITE)
     #define COM_API_GENERIC_R       (GENERIC_READ)
     #define COM_API_GENERIC_W       (GENERIC_WRITE)
@@ -92,9 +92,7 @@
         // Scans and returns a list of available COM ports.
         PortCollection ScanPorts();        
 
-
-        // Retrieves the port data for the given ID
-        // Port RetreivePortData(int id);
+        Port RetreivePortData(int id);
         
         // HANDLE openPort(const std::string& portName, DWORD baudRate);
         

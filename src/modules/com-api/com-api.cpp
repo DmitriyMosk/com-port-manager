@@ -4,7 +4,6 @@
 #include <iostream>
 
 namespace modules::com_api {
-    // Port function 
     IOCode Port::QueryPort() {
         std::stringstream portName("");
 
