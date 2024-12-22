@@ -5,11 +5,13 @@
 #include <limits>
 
 namespace modules::term_io { 
-    // void PortsInfo(const std::vector<com_api::PortData>& comPorts) { 
-    //     for (const auto& port : comPorts) {
-    //         std::cout << port.systemId << " - " << port.friendlyName << std::endl;
-    //     }
-    // }
+    void PortsInfo(const com_api::PortCollection& comPorts) { 
+        for (const auto& port : comPorts) {
+            std::cout << "ID: "     << port.attr_system_id 
+                << "\tDevName: "    << port.attr_system_name  
+                << "\tTargetName: " << port.attr_friendly_name << std::endl;
+        }
+    }
 
     // void SelectPort(const std::vector<com_api::PortData>& comPorts, int *selectedPort) {
     //     std::cout << "Select port: ";

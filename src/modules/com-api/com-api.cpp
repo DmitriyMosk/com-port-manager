@@ -10,10 +10,10 @@ namespace modules::com_api {
 
         portName << COM_API_SYSTEM_PREFIX << this->attr_system_id;
 
-        this->attr_friendly_name = portName.str();
+        this->attr_system_name = portName.str();
 
         HANDLE hCom = CreateFileA(
-            wr::stringToLpFileName(this->attr_friendly_name), 
+            wr::stringToLpFileName(this->attr_system_name), 
             wr::dwDesireAccess(this->attr_desired_access),
             wr::dwShareAccess(this->attr_sharing_access), NULL,
             wr::dwCreationDisposition(this->attr_flags_creation),
@@ -75,26 +75,20 @@ namespace modules::com_api {
             IOCode status = port.QueryPort();
 
             if (status == IOCode::QUERY_SUCCESS) {
-                wchar_t pathBuff[5000]; 
+                char pathBuff[5000]; 
 
-                DWORD result = QueryDosDeviceA(port.attr_friendly_name.c_str() + 4, pathBuff, sizeof(pathBuff));
-
-                if (result != 0) {
-                    std::wcout << "Путь к устройству: " << pathBuff << std::endl;
-                } else {
-                    DWORD error = GetLastError();
-                    std::cerr << "Ошибка при вызове QueryDosDeviceA: " << error << std::endl;
-                }
+                QueryDosDeviceA(&(port.attr_system_name)[4], pathBuff, sizeof(pathBuff));
+                port.attr_friendly_name = std::string(pathBuff);
 
                 ports.push_back(port);
-
+        
                 if (port.Close() != IOCode::QUERY_SUCCESS) {
                     DWORD error = GetLastError();
                     std::cerr << "Error closing handle: " << error << std::endl;
                 }
             }
         }
-
+       
         return ports;
     }
 

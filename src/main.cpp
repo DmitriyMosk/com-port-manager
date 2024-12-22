@@ -11,7 +11,7 @@ int main() {
     com_api::PortCollection comPorts = com_api::ScanPorts();
     
     // // Print port info 
-    // term_io::PortsInfo(comPorts);
+    term_io::PortsInfo(comPorts);
 
     // cout << "---------[USER REQUEST]----------" << endl;
     

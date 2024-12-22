@@ -11,7 +11,7 @@
 namespace modules::term_io {
 
     // Функция для вывода информации о портах
-    // void PortsInfo(const std::vector<com_api::PortData>& comPorts);
+    void PortsInfo(const com_api::PortCollection& comPorts);
 
     // // Функция для вывода информации о порте
     // void PortInfo(com_api::PortData, std::string);

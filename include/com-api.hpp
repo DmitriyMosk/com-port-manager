@@ -31,8 +31,8 @@
     #define COM_API_PORT_INFO_FULLY     "fully"
 
     // Forward declaration
-    typedef std::string port_name_t;  
-    typedef DWORD       COM_DW;
+    typedef std::string     port_name_t;  
+    typedef DWORD           COM_DW;
 
     namespace modules::com_api {
         namespace wr { 
@@ -78,8 +78,9 @@
 
             // Queries the hardware for port information and updates the port attributes.
             IOCode QueryPort();
-
+            // Closes the port handle
             IOCode Close(); 
+
             // Returns the system ID of the port
             int GetSystemID(); 
             // Check port availability
