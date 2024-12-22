@@ -88,22 +88,45 @@
             int GetSystemID(); 
         };
 
+        // TODO написать wrapper для работы с COM-портом
         struct PortInfo { 
             Port port; 
-            // <somefields>
 
-            DWORD   errors;
-            DWORD   cbInQue;
-            DWORD   cbOutQue;
-            DWORD   baudRate;
-            BYTE    byteSize;
-            BYTE    parity;
-            BYTE    stopBits;
-            DWORD   readIntervalTimeout;
-            DWORD   readTotalTimeoutMultiplier;
-            DWORD   readTotalTimeoutConstant;
-            DWORD   writeTotalTimeoutMultiplier;
-            DWORD   writeTotalTimeoutConstant;
+            // Коды ошибок, возникающие при работе с COM-портом
+            DWORD _shortly_errors;
+
+            // Тип контроля четности (например, четный, нечетный или отсутствие контроля)
+            BYTE _shortly_parity;
+
+            // Количество стоп-битов, используемых для завершения передачи байта данных
+            BYTE _shortly_stopBits;
+
+            // Количество бит в одном байте данных
+            BYTE _shortly_byteSize;
+
+            // Скорость передачи данных в бодах (битах в секунду)
+            DWORD _shortly_baudRate;
+
+            // Количество байтов, ожидающих обработки во входной очереди COM-порта
+            DWORD _fully_cbInQue;
+
+            // Количество байтов, ожидающих отправки в выходной очереди COM-порта
+            DWORD _fully_cbOutQue;
+
+            // Максимальное время ожидания между двумя последовательными байтами данных при чтении
+            DWORD _fully_readIntervalTimeout;
+
+            // Множитель для общего таймаута при чтении данных
+            DWORD _fully_readTotalTimeoutMultiplier;
+
+            // Константа для общего таймаута при чтении данных
+            DWORD _fully_readTotalTimeoutConstant;
+
+            // Множитель для общего таймаута при записи данных
+            DWORD _fully_writeTotalTimeoutMultiplier;
+
+            // Константа для общего таймаута при записи данных
+            DWORD _fully_writeTotalTimeoutConstant;
 
             PortInfo(const Port& p) : port(p), errors(0), cbInQue(0), cbOutQue(0), baudRate(0), byteSize(0), parity(0), stopBits(0),
                                   readIntervalTimeout(0), readTotalTimeoutMultiplier(0), readTotalTimeoutConstant(0),

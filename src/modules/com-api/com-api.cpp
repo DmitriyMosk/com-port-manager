@@ -116,7 +116,7 @@ namespace modules::com_api {
             std::cerr << "Ошибка при открытии порта: " << error_code << std::endl;
             return portInfo;
         }
-
+        
         COMSTAT comStat;
         DWORD errors;
         if (ClearCommError(tmpPort.hCom, &errors, &comStat)) {
