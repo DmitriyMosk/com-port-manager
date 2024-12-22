@@ -115,7 +115,7 @@ namespace modules::com_api {
 
     PortInfo QueryPortInfo(const Port& port, QueryInfoType infoType) {
         Port tmpPort(port.attr_system_id); 
-        PortInfo portInfo(port);
+        PortInfo portInfo(tmpPort);
 
         // Открытие порта для получения информации
         IOCode status = tmpPort.QueryPort(); 
@@ -146,6 +146,15 @@ namespace modules::com_api {
         // Получение информации о таймаутах порта
         COMMTIMEOUTS timeouts;
         if (GetCommTimeouts(tmpPort.hCom, &timeouts)) {
+            portInfo.readIntervalTimeout = timeouts.ReadIntervalTimeout;
+            portInfo.readTotalTimeoutMultiplier = timeouts.ReadTotalTimeoutMultiplier;
+            portInfo.readTotalTimeoutConstant = timeouts.ReadTotalTimeoutConstant;
+            portInfo.writeTotalTimeoutMultiplier = timeouts.WriteTotalTimeoutMultiplier;
+            portInfo.writeTotalTimeoutConstant = timeouts.WriteTotalTimeoutConstant;
+        }
+
+        COMMPROP commProp;
+        if (GetCommTimeouts(tmpPort.hCom, &commProp)) {
             portInfo.readIntervalTimeout = timeouts.ReadIntervalTimeout;
             portInfo.readTotalTimeoutMultiplier = timeouts.ReadTotalTimeoutMultiplier;
             portInfo.readTotalTimeoutConstant = timeouts.ReadTotalTimeoutConstant;

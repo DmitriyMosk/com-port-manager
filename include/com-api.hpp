@@ -83,7 +83,7 @@
                     CloseHandle(hCom);
                 }
             }
-            
+
             // Queries the hardware for port information and updates the port attributes.
             IOCode      QueryPort();
             // Open the port handle
@@ -152,7 +152,7 @@
                 _fully_writeTotalTimeoutConstant(0) 
             {}
 
-            ~PortInfo() : {}
+            ~PortInfo() {}
         };
 
         typedef std::vector<Port> PortCollection;
