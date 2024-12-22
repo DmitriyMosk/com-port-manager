@@ -4,6 +4,14 @@
 #include <iostream>
 
 namespace modules::com_api {
+    IOCode Port::Open() {
+        if (this->attr_is_available != PortStatus::PORT_AVAILABLE) {
+            return IOCode::ERROR_INVALID_PORT;
+        }
+
+        return this->hCom != nullptr ? IOCode::QUERY_SUCCESS : IOCode::ERROR_INVALID_VALUE;
+    }
+
     IOCode Port::QueryPort() {
         std::stringstream portName("");
 
@@ -11,6 +19,7 @@ namespace modules::com_api {
 
         this->attr_system_name = portName.str();
 
+        // tood change function 
         HANDLE hCom = CreateFileA(
             wr::stringToLpFileName(this->attr_system_name), 
             wr::dwDesireAccess(this->attr_desired_access),
@@ -116,7 +125,7 @@ namespace modules::com_api {
             std::cerr << "Ошибка при открытии порта: " << error_code << std::endl;
             return portInfo;
         }
-        
+
         COMSTAT comStat;
         DWORD errors;
         if (ClearCommError(tmpPort.hCom, &errors, &comStat)) {

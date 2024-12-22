@@ -80,6 +80,8 @@
 
             // Queries the hardware for port information and updates the port attributes.
             IOCode      QueryPort();
+            // Open the port handle
+            IOCode      Open();
             // Closes the port handle
             IOCode      Close(); 
             // Returns the port status
