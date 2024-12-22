@@ -78,6 +78,12 @@
                 attr_system_id = id;
             }
 
+            ~Port() {
+                if (hCom != nullptr) {
+                    CloseHandle(hCom);
+                }
+            }
+            
             // Queries the hardware for port information and updates the port attributes.
             IOCode      QueryPort();
             // Open the port handle
@@ -130,9 +136,23 @@
             // Константа для общего таймаута при записи данных
             DWORD _fully_writeTotalTimeoutConstant;
 
-            PortInfo(const Port& p) : port(p), errors(0), cbInQue(0), cbOutQue(0), baudRate(0), byteSize(0), parity(0), stopBits(0),
-                                  readIntervalTimeout(0), readTotalTimeoutMultiplier(0), readTotalTimeoutConstant(0),
-                                  writeTotalTimeoutMultiplier(0), writeTotalTimeoutConstant(0) {}
+            PortInfo(const Port& p) : 
+                port(p), 
+                _shortly_errors(0), 
+                _fully_cbInQue(0), 
+                _fully_cbOutQue(0), 
+                _shortly_baudRate(0),  
+                _shortly_byteSize(0), 
+                _shortly_parity(0), 
+                _shortly_stopBits(0),
+                _fully_readIntervalTimeout(0), 
+                _fully_readTotalTimeoutMultiplier(0), 
+                _fully_readTotalTimeoutConstant(0),
+                _fully_writeTotalTimeoutMultiplier(0), 
+                _fully_writeTotalTimeoutConstant(0) 
+            {}
+
+            ~PortInfo() : {}
         };
 
         typedef std::vector<Port> PortCollection;
