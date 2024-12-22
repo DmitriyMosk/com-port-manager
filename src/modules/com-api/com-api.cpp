@@ -56,8 +56,12 @@ namespace modules::com_api {
         return attr_system_id;
     }
 
-    bool Port::IsAvailable() {
-        return attr_is_available == PortStatus::PORT_AVAILABLE;
+    PortStatus Port::CheckPort() {
+        if (this->attr_is_available != PortStatus::PORT_AVAILABLE) {
+            return PortStatus::PORT_NOT_AVAILABLE;
+        }
+
+        return PortStatus::PORT_AVAILABLE;
     }
 
     PortCollection ScanPorts() {
@@ -66,7 +70,7 @@ namespace modules::com_api {
         for (int i = 1; i < 256; i++) { 
             Port port(i);
 
-            port.attr_desired_access    = COM_API_GENERIC_R;
+            port.attr_desired_access    = COM_API_GENERIC_RWRD;
             port.attr_sharing_access    = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
             port.attr_flags_creation    = OPEN_EXISTING;
             port.attr_file_flags        = FILE_ATTRIBUTE_NORMAL;
@@ -91,26 +95,57 @@ namespace modules::com_api {
         return ports;
     }
 
-    // PortData GetPortBySystemId(int systemId) {
-    //     PortData port; 
+    Port QueryPortById(const PortCollection& ports, int sysId) {
+        for (const auto& port : ports) {
+            if (port.attr_system_id == sysId) {
+                return port;
+            }
+        }
+        return Port(-1); // Return invalid port with negative system ID
+    }
 
-    //     std::string portName = ConvertIDToPortName(systemId); 
+    PortInfo QueryPortInfo(const Port& port, QueryInfoType infoType) {
+        Port tmpPort(port.attr_system_id); 
+        PortInfo portInfo(port);
 
-    //     HANDLE hComm = CreateFileA(portName.c_str(), 
-    //         GENERIC_READ | GENERIC_WRITE,
-    //         0,
-    //         0,
-    //         OPEN_EXISTING,
-    //         0,
-    //         0);
+        // Открытие порта для получения информации
+        IOCode status = tmpPort.QueryPort(); 
 
-    //     port.systemId = systemId;
-    //     port.isAvailable = hComm != INVALID_HANDLE_VALUE; 
-    //     port.descriptor = hComm;
-    //     port.friendlyName = port.isAvailable ? ConvertIDToPortName(systemId) : "Port not found";
+        if (status != IOCode::QUERY_SUCCESS) {
+            DWORD error_code = GetLastError();
+            std::cerr << "Ошибка при открытии порта: " << error_code << std::endl;
+            return portInfo;
+        }
 
-    //     return port;
-    // }
+        COMSTAT comStat;
+        DWORD errors;
+        if (ClearCommError(tmpPort.hCom, &errors, &comStat)) {
+            portInfo.errors = errors;
+            portInfo.cbInQue = comStat.cbInQue;
+            portInfo.cbOutQue = comStat.cbOutQue;
+        }
 
-    //PortData GetPortFD
+        DCB dcbSerialParams = { 0 };
+        dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+        if (GetCommState(tmpPort.hCom, &dcbSerialParams)) {
+            portInfo.baudRate = dcbSerialParams.BaudRate;
+            portInfo.byteSize = dcbSerialParams.ByteSize;
+            portInfo.parity = dcbSerialParams.Parity;
+            portInfo.stopBits = dcbSerialParams.StopBits;
+        }
+
+        // Получение информации о таймаутах порта
+        COMMTIMEOUTS timeouts;
+        if (GetCommTimeouts(tmpPort.hCom, &timeouts)) {
+            portInfo.readIntervalTimeout = timeouts.ReadIntervalTimeout;
+            portInfo.readTotalTimeoutMultiplier = timeouts.ReadTotalTimeoutMultiplier;
+            portInfo.readTotalTimeoutConstant = timeouts.ReadTotalTimeoutConstant;
+            portInfo.writeTotalTimeoutMultiplier = timeouts.WriteTotalTimeoutMultiplier;
+            portInfo.writeTotalTimeoutConstant = timeouts.WriteTotalTimeoutConstant;
+        }
+
+        tmpPort.Close();
+
+        return portInfo;
+    }
 }

@@ -72,6 +72,14 @@ namespace modules::term_io {
         *connectionType = (choice == 0) ? HW::SYNCHRONOUS : HW::ASYNCHRONOUS;
     }
 
+    void PortInfo(const com_api::PortInfo &portInfo) { 
+
+    }
+
+    std::string InterpretAttribute() {
+
+    }
+
     // void PortInfo(com_api::PortData port, std::string message) {
     //     std::cout << "\n=== Port Information ===\n";
     //     std::cout << message << "\n";

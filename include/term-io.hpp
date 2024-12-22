@@ -18,9 +18,6 @@ namespace modules::term_io {
     // Функция для вывода заголовка 
     void Title(std::string title);
 
-    // Функция для вывода информации о порте
-    //void PortInfo(const com_api::PortCollection&, std::string);
-
     // Функция для выбора порта
     void SelectPort(const com_api::PortCollection& comPorts, int* selectedPort);
 
@@ -28,7 +25,8 @@ namespace modules::term_io {
     void SelectBaudrate(int* baudRate);
 
     void SelectConnectionType(HW::ConnectionType* connectionType);
-
+    
+    void PortInfo(const com_api::PortInfo&);
 } // namespace modules::term_io
 
 #endif // MODULES_TERM_IO_HPP

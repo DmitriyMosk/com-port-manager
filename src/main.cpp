@@ -34,13 +34,15 @@ int main() {
     cout << "Baudrate: " << baudRate << endl;
     cout << "Connection type: " << (connectionType == HW::ConnectionType::ASYNCHRONOUS ? "ASYNCHRONOUS" : "SYNCHRONOUS") << endl;
 
-    term_io::Title("Checking port availability");
-    assert(com_api::QueryPortById(comPorts, portId).IsAvailable() == true);
+    com_api::Port port = com_api::QueryPortById(comPorts, portId); 
+
+    cout << "Check port availability." << endl;
+    assert(port.CheckPort() == PortStatus::PORT_AVAILABLE);
 
     term_io::Title("Port info (if exists)");
-    com_api::QueryPortInfo(comPorts, portId).PrintPortInfo();
+    term_io::PortInfo(com_api::QueryPortInfo(port, QueryInfoType::SHORTLY));
 
-    HW::WirePort(com_api::QueryPortById(comPorts, portId), baudRate, connectionType);
+    HW::WirePort(port, baudRate, connectionType);
 
     return EXIT_SUCCESS;
 }
