@@ -36,8 +36,9 @@ int main() {
 
     com_api::Port port = com_api::QueryPortById(comPorts, portId); 
 
-    cout << "Check port availability." << endl;
+    cout << "###Check port availability.###" << endl;
     assert(port.CheckPort() == PortStatus::PORT_AVAILABLE);
+    cout << "###[isAvailable -> OK].###" << endl;
 
     term_io::Title("Port info (if exists)");
     term_io::PortInfo(com_api::QueryPortInfo(port, QueryInfoType::SHORTLY));

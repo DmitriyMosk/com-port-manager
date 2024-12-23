@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <limits>
+#include <string>
 
 namespace modules::term_io { 
     void Title(std::string title) { 
@@ -49,7 +50,7 @@ namespace modules::term_io {
     void SelectBaudrate(int* baudRate) { 
         std::cout << "Select baudrate: ";
 
-        int baudrate;
+        int baudrate{0};
         while (!(std::cin >> baudrate)) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -73,25 +74,14 @@ namespace modules::term_io {
     }
 
     void PortInfo(const com_api::PortInfo &portInfo) { 
-        Title("Port Information (if exists)");
-        
         if (portInfo._qtype == QueryInfoType::SHORTLY || portInfo._qtype == QueryInfoType::FULLY) {
-            std::cout << "Baudrate: "   << (portInfo.port.attr_baud_rate != 0) ? portInfo.port.attr_baud_rate : "Undefined" << std::endl;
-            std::cout << "Byte size: "  << (portInfo->byteSize << std::endl;
-            std::cout << "Stop bits: " << portInfo->stopBits << std::endl;
-            std::cout << "Parity: " << portInfo->parity << std::endl;
-        } else if (portInfo._qtype == com_api::QueryInfoType::FULLY) {
-            std::cout << "Port info: failed" << std::endl;
+            std::cout << "Baudrate: "   << ((portInfo._shortly_state_baudRate != 0) ? portInfo._shortly_state_baudRate : -1) << "\tSelected: " << portInfo.port.attr_baud_rate << std::endl;
+            std::cout << "Byte size: "  << ((portInfo._shortly_state_byteSize != 0) ? portInfo._shortly_state_byteSize : -1) << std::endl;
+            std::cout << "Stop bits: "  << ((portInfo._shortly_state_stopBits != 0) ? portInfo._shortly_state_stopBits : -1) << std::endl;
+            std::cout << "Parity: "     << ((portInfo._shortly_state_parity != 0) ? portInfo._shortly_state_parity : -1) << std::endl;
+        } else if (portInfo._qtype == QueryInfoType::FULLY) {
+            std::cout << "In queue: "   << ((portInfo._fully_errors_cbInQue != 0) ? portInfo._fully_errors_cbInQue : -1) << std::endl;
         }
-    }
-
-    template<typename T>
-    std::string InterpretAttribute(T attribute) {
-        if (std::is_same<T, HW::ConnectionType>::value) {
-            return (attribute == HW::SYNCHRONOUS) ? "Synchronous" : "Asynchronous";
-        }
-
-        return "Undefined";
     }
 
     // void PortInfo(com_api::PortData port, std::string message) {

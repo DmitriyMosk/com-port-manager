@@ -1,13 +1,14 @@
-#include <tchar.h>
+#ifndef COM_API_HPP
+#define COM_API_HPP
+
 #include <windows.h>
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#ifndef MODULES_COM_API_HPP
-#define MODULES_COM_API_HPP
-#define COM_API_SYSTEM_PREFIX "\\\\.\\COM"
+constexpr const char* COM_API_SYSTEM_PREFIX = "\\\\.\\COM";
 
 enum IOCode {
   ERROR_INVALID_VALUE =
@@ -18,15 +19,15 @@ enum IOCode {
   QUERY_SUCCESS = 0
 };
 
-enum PortStatus { PORT_AVAILABLE, PORT_NOT_AVAILABLE };
+enum PortStatus : std::uint8_t { PORT_AVAILABLE, PORT_NOT_AVAILABLE };
 
 // Generic access rights (wrapper)
-#define COM_API_GENERIC_RWRD (GENERIC_READ | GENERIC_WRITE)
-#define COM_API_GENERIC_R (GENERIC_READ)
-#define COM_API_GENERIC_W (GENERIC_WRITE)
+#define COM_API_GENERIC_RW  (GENERIC_READ | GENERIC_WRITE)
+#define COM_API_GENERIC_R   (GENERIC_READ)
+#define COM_API_GENERIC_W   (GENERIC_WRITE)
 
 // for port information
-enum QueryInfoType { SHORTLY = 0, FULLY = 1 };
+enum QueryInfoType { SHORTLY = 0, FULLY = 1 }; 
 
 // Forward declaration
 typedef std::string port_name_t;
@@ -34,13 +35,12 @@ typedef DWORD COM_DW;
 
 namespace modules::com_api {
 namespace wr {
-LPCSTR stringToLpFileName(port_name_t);
-
-DWORD dwDesireAccess(COM_DW);
-DWORD dwShareAccess(COM_DW);
-DWORD dwCreationDisposition(COM_DW);
-DWORD dwFlagsAndAttributes(COM_DW);
-}  // namespace wr
+auto stringToLpFileName(port_name_t portName)   -> LPCSTR;
+auto dwDesireAccess(COM_DW access)              -> DWORD;
+auto dwShareAccess(COM_DW access)               -> DWORD;
+auto dwCreationDisposition(COM_DW disposition)  -> DWORD;
+auto dwFlagsAndAttributes(COM_DW attributes)    -> DWORD;
+}  // namespace wr 
 
 struct Port {
   int attr_system_id;
@@ -59,7 +59,7 @@ struct Port {
   //
 
   Port(int id)
-      : attr_system_id(0),
+      : attr_system_id(id), 
         attr_baud_rate(0),
         attr_desired_access(0),
         attr_sharing_access(0),
@@ -69,9 +69,21 @@ struct Port {
         attr_system_name(""),
         attr_friendly_name(""),
         // hCom - handle to the port
-        hCom(nullptr) {
-    attr_system_id = id;
-  }
+        hCom(nullptr) {}
+
+  Port(const Port &p)
+      : attr_system_id(p.attr_system_id), 
+        attr_baud_rate(p.attr_baud_rate),
+        attr_desired_access(p.attr_desired_access),
+        attr_sharing_access(p.attr_sharing_access),
+        attr_flags_creation(p.attr_flags_creation),
+        attr_file_flags(p.attr_file_flags),
+        attr_is_available(p.attr_is_available),
+        attr_system_name(p.attr_system_name),
+        attr_friendly_name(p.attr_friendly_name),
+        // hCom - handle to the port
+        hCom(p.hCom) {}
+
 
   ~Port() {
     if (hCom != nullptr) {
@@ -80,16 +92,16 @@ struct Port {
   }
 
   // Queries the hardware for port information and updates the port attributes.
-  IOCode QueryPort();
+  auto QueryPort() -> IOCode;
   // Open the port handle
-  IOCode Open();
+  auto Open() -> IOCode;
   // Closes the port handle
-  IOCode Close();
+  auto Close() -> IOCode;
   // Returns the port status
-  PortStatus CheckPort();
+  auto CheckPort() -> PortStatus;
   // Returns the system ID of the port
-  int GetSystemID();
-};
+  auto GetSystemID() -> int;
+};;
 
 // TODO написать wrapper для работы с COM-портом
 struct PortInfo {
