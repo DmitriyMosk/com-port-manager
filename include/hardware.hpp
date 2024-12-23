@@ -7,6 +7,8 @@
 #define HW_HPP
 namespace HW {
   
+constexpr size_t BUFFER_SIZE = 1024;
+
 enum SupportedDevice {
   GENERIC_DEVICE,     // use for text. datatravaling
   MICROPHONE_DEVICE,  // use for receive audio data
