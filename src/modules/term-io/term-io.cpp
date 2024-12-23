@@ -73,60 +73,51 @@ namespace modules::term_io {
         *connectionType = (choice == 0) ? HW::SYNCHRONOUS : HW::ASYNCHRONOUS;
     }
 
-    void PortInfo(const com_api::PortInfo &portInfo) { 
+    void PortInfo(const com_api::PortInfo &portInfo) {
         if (portInfo._qtype == QueryInfoType::SHORTLY || portInfo._qtype == QueryInfoType::FULLY) {
-            std::cout << "Baudrate: "   << ((portInfo._shortly_state_baudRate != 0) ? portInfo._shortly_state_baudRate : -1) << "\tSelected: " << portInfo.port.attr_baud_rate << std::endl;
-            std::cout << "Byte size: "  << ((portInfo._shortly_state_byteSize != 0) ? portInfo._shortly_state_byteSize : -1) << std::endl;
-            std::cout << "Stop bits: "  << ((portInfo._shortly_state_stopBits != 0) ? portInfo._shortly_state_stopBits : -1) << std::endl;
-            std::cout << "Parity: "     << ((portInfo._shortly_state_parity != 0) ? portInfo._shortly_state_parity : -1) << std::endl;
-        } else if (portInfo._qtype == QueryInfoType::FULLY) {
-            std::cout << "In queue: "   << ((portInfo._fully_errors_cbInQue != 0) ? portInfo._fully_errors_cbInQue : -1) << std::endl;
+            // Базовые параметры
+            std::cout << "=== Basic Port Parameters ===\n";
+            std::cout << "Baudrate: \t" << portInfo._shortly_state_baudRate << " bps" 
+                    << "\tSelected: " << portInfo.port.attr_baud_rate << " bps\n";
+            
+            std::cout << "Byte size: \t" << static_cast<int>(portInfo._shortly_state_byteSize) << " bits\n";
+            
+            std::cout << "Stop bits: \t";
+            switch(portInfo._shortly_state_stopBits) {
+                case ONESTOPBIT: std::cout << "1"; break;
+                case ONE5STOPBITS: std::cout << "1.5"; break;
+                case TWOSTOPBITS: std::cout << "2"; break;
+                default: std::cout << "Unknown"; break;
+            }
+            std::cout << "\n";
+            
+            std::cout << "Parity: \t";
+            switch(portInfo._shortly_state_parity) {
+                case NOPARITY: std::cout << "None"; break;
+                case ODDPARITY: std::cout << "Odd"; break;
+                case EVENPARITY: std::cout << "Even"; break;
+                case MARKPARITY: std::cout << "Mark"; break;
+                case SPACEPARITY: std::cout << "Space"; break;
+                default: std::cout << "Unknown"; break;
+            }
+            std::cout << "\n";
+        }
+
+        if (portInfo._qtype == QueryInfoType::FULLY) {
+            std::cout << "\n=== Extended Port Parameters ===\n";
+            std::cout << "Queue Status:\n";
+            std::cout << "  Input queue: \t" << portInfo._fully_errors_cbInQue << " bytes\n";
+            std::cout << "  Output queue: \t" << portInfo._fully_errors_cbOutQue << " bytes\n";
+            
+            std::cout << "\nTimeout Settings (in milliseconds):\n";
+            std::cout << "  Read interval timeout: \t\t" 
+                    << portInfo._fully_timeouts_readIntervalTimeout << " ms\n";
+            std::cout << "  Read total timeout = " 
+                    << portInfo._fully_timeouts_readTotalTimeoutMultiplier << " x bytes + " 
+                    << portInfo._fully_timeouts_readTotalTimeoutConstant << " ms\n";
+            std::cout << "  Write total timeout = "
+                    << portInfo._fully_timeouts_writeTotalTimeoutMultiplier << " x bytes + "
+                    << portInfo._fully_timeouts_writeTotalTimeoutConstant << " ms\n";
         }
     }
-
-    // void PortInfo(com_api::PortData port, std::string message) {
-    //     std::cout << "\n=== Port Information ===\n";
-    //     std::cout << message << "\n";
-    //     std::cout << "System ID: " << port.systemId << "\n";
-    //     std::cout << "Friendly Name: " << port.friendlyName << "\n";
-
-    //     // Basic port information that's typically available
-    //     std::cout << "Port Number: COM" << port.systemId << "\n";
-    //     std::cout << "Status: " << (port.isAvailable ? "Available" : "In Use") << "\n";
-
-    //     HANDLE hCOM = CreateFileA(
-    //         com_api::ConvertIDToPortName(port.systemId).c_str(),
-    //         GENERIC_READ | GENERIC_WRITE,
-    //         0,
-    //         NULL,
-    //         OPEN_EXISTING,
-    //         FILE_ATTRIBUTE_NORMAL,
-    //         NULL
-    //     );
-
-    //     if (hCOM != INVALID_HANDLE_VALUE) {
-    //         DCB dcbSerialParams = { 0 };
-    //         dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-
-    //         if (GetCommState(hCOM, &dcbSerialParams)) {
-    //             std::cout << "Current Settings:\n";
-    //             std::cout << "Baud Rate: " << dcbSerialParams.BaudRate << "\n";
-    //             std::cout << "Byte Size: " << (int)dcbSerialParams.ByteSize << "\n";
-    //             std::cout << "Parity: " << (int)dcbSerialParams.Parity << "\n";
-    //             std::cout << "Stop Bits: " << (int)dcbSerialParams.StopBits << "\n";
-    //         }
-
-    //         COMMPROP commProp;
-    //         if (GetCommProperties(hCOM, &commProp)) {
-    //             std::cout << "\nPort Capabilities:\n";
-    //             std::cout << "Maximum Baud Rate: " << commProp.dwMaxBaud << "\n";
-    //             std::cout << "Maximum TX Queue: " << commProp.dwMaxTxQueue << "\n";
-    //             std::cout << "Maximum RX Queue: " << commProp.dwMaxRxQueue << "\n";
-    //         }
-
-    //         CloseHandle(hCOM);
-    //     } else {
-    //         std::cout << "Could not open port for detailed information.\n";
-    //     }
-    // }
 }
