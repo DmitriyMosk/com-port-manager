@@ -1,4 +1,4 @@
-name: Clang Lint
+name: CI
 
 on:
   push:
@@ -9,8 +9,9 @@ on:
       - main
 
 jobs:
-  clang-lint:
+  build-and-lint:
     runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -30,12 +31,27 @@ jobs:
           cd build
           cmake .. -G "MinGW Makefiles"
 
+      - name: Build project
+        run: |
+          cd build
+          mingw32-make.exe -j5
+
       - name: Run Clang-Tidy
         run: |
           cd build
-          clang-tidy ../src/main.cpp -- -I../src
+          clang-tidy ../src/main.cpp -- -I../include
 
       - name: Run Clang-Format
         run: |
           cd build
-          clang-format -i ../src/main.cpp
+          clang-format -i ../src/main.cpp --style=google
+
+      - name: Run Clang-Tidy on all sources
+        run: |
+          cd build
+          find ../src -name '*.cpp' -exec clang-tidy {} -- -I../include \;
+
+      - name: Run Clang-Format on all sources
+        run: |
+          cd build
+          find ../src -name '*.cpp' -exec clang-format -i --style=google {} \;
