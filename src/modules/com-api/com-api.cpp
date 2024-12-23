@@ -4,7 +4,14 @@
 #include <iostream>
 
 namespace modules::com_api {
-    // Port function 
+    IOCode Port::Open() {
+        if (this->attr_is_available != PortStatus::PORT_AVAILABLE) {
+            return IOCode::ERROR_INVALID_PORT;
+        }
+
+        return this->hCom != nullptr ? IOCode::QUERY_SUCCESS : IOCode::ERROR_INVALID_VALUE;
+    }
+
     IOCode Port::QueryPort() {
         std::stringstream portName("");
 
@@ -12,6 +19,7 @@ namespace modules::com_api {
 
         this->attr_system_name = portName.str();
 
+        // tood change function 
         HANDLE hCom = CreateFileA(
             wr::stringToLpFileName(this->attr_system_name), 
             wr::dwDesireAccess(this->attr_desired_access),
@@ -49,7 +57,7 @@ namespace modules::com_api {
         if (this->hCom != nullptr) {
             return CloseHandle(this->hCom) ? IOCode::QUERY_SUCCESS : IOCode::ERROR_INVALID_VALUE;
         } else {
-            return IOCode::ERROR_INVALID_VALUE;
+            return IOCode::ERROR_INVALID_PORT;
         }
     }
 
@@ -57,8 +65,12 @@ namespace modules::com_api {
         return attr_system_id;
     }
 
-    bool Port::IsAvailable() {
-        return attr_is_available == PortStatus::PORT_AVAILABLE;
+    PortStatus Port::CheckPort() {
+        if (this->attr_is_available != PortStatus::PORT_AVAILABLE) {
+            return PortStatus::PORT_NOT_AVAILABLE;
+        }
+
+        return PortStatus::PORT_AVAILABLE;
     }
 
     PortCollection ScanPorts() {
@@ -67,7 +79,7 @@ namespace modules::com_api {
         for (int i = 1; i < 256; i++) { 
             Port port(i);
 
-            port.attr_desired_access    = COM_API_GENERIC_R;
+            port.attr_desired_access    = COM_API_GENERIC_RWRD;
             port.attr_sharing_access    = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
             port.attr_flags_creation    = OPEN_EXISTING;
             port.attr_file_flags        = FILE_ATTRIBUTE_NORMAL;
@@ -81,37 +93,78 @@ namespace modules::com_api {
                 port.attr_friendly_name = std::string(pathBuff);
 
                 ports.push_back(port);
-        
-                if (port.Close() != IOCode::QUERY_SUCCESS) {
-                    DWORD error = GetLastError();
-                    std::cerr << "Error closing handle: " << error << std::endl;
-                }
+
+                port.Close();
             }
         }
        
         return ports;
     }
 
-    // PortData GetPortBySystemId(int systemId) {
-    //     PortData port; 
+    Port QueryPortById(const PortCollection& ports, int sysId) {
+        for (const auto& port : ports) {
+            if (port.attr_system_id == sysId) {
+                return port;
+            }
+        }
+        return Port(-1); // Return invalid port with negative system ID
+    }
 
-    //     std::string portName = ConvertIDToPortName(systemId); 
+    PortInfo QueryPortInfo(const Port& port, QueryInfoType infoType) {
+        Port tmpPort(port.attr_system_id); 
+        PortInfo portInfo(tmpPort);
 
-    //     HANDLE hComm = CreateFileA(portName.c_str(), 
-    //         GENERIC_READ | GENERIC_WRITE,
-    //         0,
-    //         0,
-    //         OPEN_EXISTING,
-    //         0,
-    //         0);
+        // Открытие порта для получения информации
+        IOCode status = tmpPort.QueryPort(); 
 
-    //     port.systemId = systemId;
-    //     port.isAvailable = hComm != INVALID_HANDLE_VALUE; 
-    //     port.descriptor = hComm;
-    //     port.friendlyName = port.isAvailable ? ConvertIDToPortName(systemId) : "Port not found";
+        if (status != IOCode::QUERY_SUCCESS) {
+            tmpPort.Close();
+            return portInfo;
+        }
 
-    //     return port;
-    // }
+        COMSTAT comStat;
+        DWORD errors;
 
-    //PortData GetPortFD
+        WINBOOL getCommError = ClearCommError(tmpPort.hCom, &errors, &comStat);
+
+        DCB dcbSerialParams = { 0 };
+        dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+        
+        WINBOOL getCommState = GetCommState(tmpPort.hCom, &dcbSerialParams);
+
+        if (infoType == QueryInfoType::SHORTLY || infoType == QueryInfoType::FULLY) {   
+            
+            if (getCommError) {
+                portInfo._shortly_errors_errors = errors;
+            }
+
+            if (getCommState) { 
+                portInfo._shortly_state_baudRate  = dcbSerialParams.BaudRate;
+                portInfo._shortly_state_byteSize  = dcbSerialParams.ByteSize;
+                portInfo._shortly_state_stopBits  = dcbSerialParams.StopBits;
+                portInfo._shortly_state_parity    = dcbSerialParams.Parity;
+            }
+        }
+
+        if (infoType == QueryInfoType::FULLY) {
+            if (getCommError) {
+                portInfo._fully_errors_cbInQue     = comStat.cbInQue;
+                portInfo._fully_errors_cbOutQue    = comStat.cbOutQue;
+            }
+
+            COMMTIMEOUTS timeouts;
+            if (GetCommTimeouts(tmpPort.hCom, &timeouts)) {
+                portInfo._fully_timeouts_readIntervalTimeout            = timeouts.ReadIntervalTimeout;
+                portInfo._fully_timeouts_readTotalTimeoutMultiplier     = timeouts.ReadTotalTimeoutMultiplier;
+                portInfo._fully_timeouts_readTotalTimeoutConstant       = timeouts.ReadTotalTimeoutConstant;
+                portInfo._fully_timeouts_writeTotalTimeoutMultiplier    = timeouts.WriteTotalTimeoutMultiplier;
+                portInfo._fully_timeouts_writeTotalTimeoutConstant      = timeouts.WriteTotalTimeoutConstant;
+            }
+        }
+
+        tmpPort.Close();
+        
+        portInfo._qtype = infoType;
+        return portInfo;
+    }
 }

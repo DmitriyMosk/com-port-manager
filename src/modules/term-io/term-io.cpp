@@ -1,10 +1,15 @@
-#include <com-api.hpp> 
-#include <term-io.hpp>
+#include "com-api.hpp"
+#include "term-io.hpp"
+#include "hardware.hpp"
 
 #include <iostream>
 #include <limits>
 
 namespace modules::term_io { 
+    void Title(std::string title) { 
+        std::cout << std::endl << "######################### - " << title << std::endl << std::endl;
+    }
+
     void PortsInfo(const com_api::PortCollection& comPorts) { 
         for (const auto& port : comPorts) {
             std::cout << "ID: "     << port.attr_system_id 
@@ -13,48 +18,81 @@ namespace modules::term_io {
         }
     }
 
-    // void SelectPort(const std::vector<com_api::PortData>& comPorts, int *selectedPort) {
-    //     std::cout << "Select port: ";
+    void SelectPort(const com_api::PortCollection& comPorts, int* selectedPort) {
+        std::cout << "Select port: ";
         
-    //     int portId;
-    //     bool validPort = false;
-    //     do {
-    //         if (!(std::cin >> portId)) {
-    //             std::cin.clear();
-    //             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    //             std::cout << "Invalid input. Please enter a number: ";
-    //             continue;
-    //         }
+        int portId;
+        bool validPort = false;
+        do {
+            if (!(std::cin >> portId)) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cout << "Invalid input. Please enter a number: ";
+                continue;
+            }
 
-    //         for (const auto& port : comPorts) {
-    //             if (port.systemId == portId) {
-    //                 validPort = true;
-    //                 break;
-    //             }
-    //         }
+            for (const auto& port : comPorts) {
+                if (port.attr_system_id == portId) {
+                    validPort = true;
+                    break;
+                }
+            }
 
-    //         if (!validPort) {
-    //             std::cout << "Port not found. Please select a valid port: ";
-    //         }
-    //     } while (!validPort);
+            if (!validPort) {
+                std::cout << "Port not found. Please select a valid port: ";
+            }
+        } while (!validPort);
 
-    //     *selectedPort = portId;
-    // }
+        *selectedPort = portId;
+    }
 
-    // bool SelectBaudrate(const std::vector<com_api::PortData>& comPorts, int* baudRate) { 
-    //     std::cout << "Select baudrate: ";
+    void SelectBaudrate(int* baudRate) { 
+        std::cout << "Select baudrate: ";
 
-    //     int baudrate;
-    //     while (!(std::cin >> baudrate)) {
-    //         std::cin.clear();
-    //         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    //         std::cout << "Invalid input. Please enter a number: ";
-    //     }
+        int baudrate;
+        while (!(std::cin >> baudrate)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Invalid input. Please enter a number: ";
+        }
 
-    //     *baudRate = baudrate;
+        *baudRate = baudrate;
+    }
 
-    //     return TERM_IO_CORRECT_INPUT;
-    // }
+    void SelectConnectionType(HW::ConnectionType* connectionType) {
+        std::cout << "Select connection type (0 - sync, 1 - async): ";
+
+        int choice;
+        while (!(std::cin >> choice) || (choice != 0 && choice != 1)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Invalid input. Please enter a number: ";
+        }
+
+        *connectionType = (choice == 0) ? HW::SYNCHRONOUS : HW::ASYNCHRONOUS;
+    }
+
+    void PortInfo(const com_api::PortInfo &portInfo) { 
+        Title("Port Information (if exists)");
+        
+        if (portInfo._qtype == QueryInfoType::SHORTLY || portInfo._qtype == QueryInfoType::FULLY) {
+            std::cout << "Baudrate: "   << (portInfo.port.attr_baud_rate != 0) ? portInfo.port.attr_baud_rate : "Undefined" << std::endl;
+            std::cout << "Byte size: "  << (portInfo->byteSize << std::endl;
+            std::cout << "Stop bits: " << portInfo->stopBits << std::endl;
+            std::cout << "Parity: " << portInfo->parity << std::endl;
+        } else if (portInfo._qtype == com_api::QueryInfoType::FULLY) {
+            std::cout << "Port info: failed" << std::endl;
+        }
+    }
+
+    template<typename T>
+    std::string InterpretAttribute(T attribute) {
+        if (std::is_same<T, HW::ConnectionType>::value) {
+            return (attribute == HW::SYNCHRONOUS) ? "Synchronous" : "Asynchronous";
+        }
+
+        return "Undefined";
+    }
 
     // void PortInfo(com_api::PortData port, std::string message) {
     //     std::cout << "\n=== Port Information ===\n";

@@ -1,6 +1,24 @@
-#ifndef IO_HW_HPP
-#define IO_HW_HPP
-    namespace io_hw {
+#include "com-api.hpp"
 
-    }
-#endif // IO_HW_HPP
+#define HW_ASYNC_MODE   0x00000001
+#define HW_SYNC_MODE    0x00000000 
+
+#ifndef HW_HPP
+#define HW_HPP
+    namespace HW {
+        enum SupportedDevice { 
+            GENERIC_DEVICE,     // use for text. datatravaling 
+            MICROPHONE_DEVICE,  // use for receive audio data
+            SPEAKER_DEVICE,     // use for transmit audio data
+        };
+
+        enum ConnectionType {
+            SYNCHRONOUS     = HW_SYNC_MODE,
+            ASYNCHRONOUS    = HW_ASYNC_MODE
+        };
+
+        void WirePort(const modules::com_api::Port&, int, int); 
+
+        void _microphonePort(const modules::com_api::Port&, int, int);
+    };
+#endif // HW_HPP

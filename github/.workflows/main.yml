@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-lint:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up MinGW
+        run: |
+          choco install mingw
+          echo "CMAKE_C_COMPILER=mingw32-gcc" >> $GITHUB_ENV
+          echo "CMAKE_CXX_COMPILER=mingw32-g++" >> $GITHUB_ENV
+
+      - name: Install Clang
+        run: choco install llvm
+
+      - name: Run CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G "MinGW Makefiles"
+
+      - name: Build project
+        run: |
+          cd build
+          mingw32-make.exe -j5
+
+      - name: Run Clang-Tidy
+        run: |
+          cd build
+          clang-tidy ../src/main.cpp -- -I../include
+
+      - name: Run Clang-Format
+        run: |
+          cd build
+          clang-format -i ../src/main.cpp --style=google
+
+      - name: Run Clang-Tidy on all sources
+        run: |
+          cd build
+          find ../src -name '*.cpp' -exec clang-tidy {} -- -I../include \;
+
+      - name: Run Clang-Format on all sources
+        run: |
+          cd build
+          find ../src -name '*.cpp' -exec clang-format -i --style=google {} \;

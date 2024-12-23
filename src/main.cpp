@@ -1,52 +1,48 @@
 #include "com-api.hpp" 
 #include "term-io.hpp"
+#include "hardware.hpp"
+
 #include <cassert>
 
 using namespace std;
 using namespace modules;
 
 int main() {
-    cout << "----------[PORT LIST]------------" << endl;
+    term_io::Title("COM Port Scanner");
 
     com_api::PortCollection comPorts = com_api::ScanPorts();
-    
-    // // Print port info 
+    // Print port info 
     term_io::PortsInfo(comPorts);
-
-    // cout << "---------[USER REQUEST]----------" << endl;
     
-    // // Select port 
-    // int portId;
-    // term_io::SelectPort(comPorts, &portId);
+    //
+    term_io::Title("Request user settings");
     
-    // com_api::PortData port = com_api::(portId);
+    // Select port 
+    int portId;
+    term_io::SelectPort(comPorts, &portId);
 
-    // // Insert Baudrate
-    // int baudRate;
-    // bool isBaudrateSelected = term_io::SelectBaudrate(comPorts, &baudRate);
+    // Insert Baudrate
+    int baudRate;
+    term_io::SelectBaudrate(&baudRate);
+    //
 
-    // if (!isBaudrateSelected) {
-    //     assert(isBaudrateSelected);
-    // }
+    HW::ConnectionType connectionType;
+    term_io::SelectConnectionType(&connectionType); 
+    // 
+    term_io::Title("User settings");
+    cout << "Port ID: " << portId << endl;
+    cout << "Baudrate: " << baudRate << endl;
+    cout << "Connection type: " << term_io::InterpretAttribute(static_cast<HW::ConnectionType>(connectionType)) << endl;
 
-    // cout << "----------[USER SETTINGS]--------" << endl;
+    com_api::Port port = com_api::QueryPortById(comPorts, portId); 
 
-    // cout << "Selected port: " << portId << endl;    
-    // cout << "Selected baudrate: " << baudRate << endl;
+    cout << "Check port availability." << endl;
+    assert(port.CheckPort() == PortStatus::PORT_AVAILABLE);
 
-    // cout << "---------------------------------" << endl;
+    term_io::Title("Port info (if exists)");
+    term_io::PortInfo(com_api::QueryPortInfo(port, QueryInfoType::SHORTLY));
 
-    // com_api::PortData port = com_api::GetPortBySystemId(portId);
-
-    // term_io::PortInfo(port, COM_API_INFO_SHORTLY);
-
-    // cout << "---------------------------------" << endl;\
-
-    // // port = com_api::openPort(port.friendlyName, baudRate);
-    
-    // // if (port.accept) { 
-
-    // // }
+    HW::WirePort(port, baudRate, connectionType);
 
     return EXIT_SUCCESS;
 }
