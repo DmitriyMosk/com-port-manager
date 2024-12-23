@@ -1,9 +1,12 @@
 #include "com-api.hpp"
 
-#ifdef MODULES_COM_API_HPP
+#ifdef COM_API_HPP
 
 namespace modules::com_api::wr {
-LPCSTR stringToLpFileName(port_name_t name) { return name.c_str(); }
+
+auto stringToLpFileName(port_name_t name) -> LPCSTR { 
+  return name.c_str(); 
+} 
 
 DWORD dwDesireAccess(COM_DW accessRight) { return accessRight; }
 
@@ -16,4 +19,4 @@ DWORD dwCreationDisposition(COM_DW creationDisposition) {
 DWORD dwFlagsAndAttributes(COM_DW fileFlags) { return fileFlags; }
 }  // namespace modules::com_api::wr
 
-#endif  // MODULES_COM_API_HPP
+#endif  // COM_API_HPP

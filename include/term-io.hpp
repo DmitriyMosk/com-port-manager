@@ -28,8 +28,18 @@ void SelectConnectionType(HW::ConnectionType* connectionType);
 
 void PortInfo(const com_api::PortInfo&);
 
-template <typename T>
-std::string InterpretAttribute(T attribute);
+template<typename T>
+std::string InterpretAttribute(T attribute) {
+    if (typeid(T) == typeid(HW::ConnectionType)) {
+        switch (attribute) {
+            case HW::SYNCHRONOUS: return "Synchronous";
+            case HW::ASYNCHRONOUS: return "Asynchronous";
+            default: return "Unknown connection type";
+        }
+    }
+    return "Undefined attribute type";
+}
+
 }  // namespace modules::term_io
 
-#endif  // MODULES_TERM_IO_HPP
+#endif  // MODULES_TERM_IO_HPP 
