@@ -35,13 +35,14 @@ int main() {
     cout << "Connection type: " << term_io::InterpretAttribute(static_cast<HW::ConnectionType>(connectionType)) << endl;
 
     com_api::Port port = com_api::QueryPortById(comPorts, portId); 
-
+    port.attr_baud_rate = baudRate; 
+    
     cout << "###Check port availability.###" << endl;
     assert(port.CheckPort() == PortStatus::PORT_AVAILABLE);
     cout << "###[isAvailable -> OK].###" << endl;
 
     term_io::Title("Port info (if exists)");
-    term_io::PortInfo(com_api::QueryPortInfo(port, QueryInfoType::SHORTLY));
+    term_io::PortInfo(com_api::QueryPortInfo(port, QueryInfoType::FULLY));
 
     HW::WirePort(port, baudRate, connectionType);
 

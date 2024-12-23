@@ -30,8 +30,8 @@ enum PortStatus : std::uint8_t { PORT_AVAILABLE, PORT_NOT_AVAILABLE };
 enum QueryInfoType { SHORTLY = 0, FULLY = 1 }; 
 
 // Forward declaration
-typedef std::string port_name_t;
-typedef DWORD COM_DW;
+using port_name_t = std::string;
+using COM_DW      = DWORD;
 
 namespace modules::com_api {
 namespace wr {
@@ -101,7 +101,7 @@ struct Port {
   auto CheckPort() -> PortStatus;
   // Returns the system ID of the port
   auto GetSystemID() -> int;
-};;
+};
 
 // TODO написать wrapper для работы с COM-портом
 struct PortInfo {
