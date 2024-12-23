@@ -2,8 +2,6 @@
 
 namespace HW {
 
-    void WirePort(const modules::com_api::Port &port, int baudRate, int mode) { 
+void WirePort(const modules::com_api::Port &port, int baudRate, int mode) {}
 
-    }
-    
-}
+}  // namespace HW
