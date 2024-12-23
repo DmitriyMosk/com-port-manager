@@ -32,7 +32,7 @@ int main() {
     term_io::Title("User settings");
     cout << "Port ID: " << portId << endl;
     cout << "Baudrate: " << baudRate << endl;
-    cout << "Connection type: " << (connectionType == HW::ConnectionType::ASYNCHRONOUS ? "ASYNCHRONOUS" : "SYNCHRONOUS") << endl;
+    cout << "Connection type: " << term_io::InterpretAttribute(static_cast<HW::ConnectionType>(connectionType)) << endl;
 
     com_api::Port port = com_api::QueryPortById(comPorts, portId); 
 

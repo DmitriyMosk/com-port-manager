@@ -27,6 +27,10 @@ namespace modules::term_io {
     void SelectConnectionType(HW::ConnectionType* connectionType);
     
     void PortInfo(const com_api::PortInfo&);
+
+
+    template<typename T>
+    std::string InterpretAttribute(T attribute);
 } // namespace modules::term_io
 
 #endif // MODULES_TERM_IO_HPP

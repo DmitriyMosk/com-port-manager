@@ -26,7 +26,7 @@ include_directories(${PJ_INCLUDE_DIR})
 add_subdirectory(${PJ_MODULES_DIR}/${PJ_MODULE_COM_API} ${CMAKE_BINARY_DIR}/src/modules/com-api-build)
 add_subdirectory(${PJ_MODULES_DIR}/${PJ_MODULE_TERM_IO} ${CMAKE_BINARY_DIR}/src/modules/term-io-build)
 
-file(GLOB SOURCES "src/main.cpp")
+file(GLOB SOURCES "src/main.cpp" "src/hardware/*.cpp")
 
 add_executable(com-port-manager ${SOURCES})
 target_link_libraries(com-port-manager com-api term-io setupapi)

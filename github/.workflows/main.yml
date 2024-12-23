@@ -1,0 +1,41 @@
+name: Clang Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  clang-lint:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up MinGW
+        run: |
+          choco install mingw
+          echo "CMAKE_C_COMPILER=mingw32-gcc" >> $GITHUB_ENV
+          echo "CMAKE_CXX_COMPILER=mingw32-g++" >> $GITHUB_ENV
+
+      - name: Install Clang
+        run: choco install llvm
+
+      - name: Run CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G "MinGW Makefiles"
+
+      - name: Run Clang-Tidy
+        run: |
+          cd build
+          clang-tidy ../src/main.cpp -- -I../src
+
+      - name: Run Clang-Format
+        run: |
+          cd build
+          clang-format -i ../src/main.cpp

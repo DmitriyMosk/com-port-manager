@@ -7,7 +7,7 @@
 
 namespace modules::term_io { 
     void Title(std::string title) { 
-        std::cout << "######################### - " << title << std::endl << std::endl;
+        std::cout << std::endl << "######################### - " << title << std::endl << std::endl;
     }
 
     void PortsInfo(const com_api::PortCollection& comPorts) { 
@@ -73,11 +73,25 @@ namespace modules::term_io {
     }
 
     void PortInfo(const com_api::PortInfo &portInfo) { 
-
+        Title("Port Information (if exists)");
+        
+        if (portInfo._qtype == QueryInfoType::SHORTLY || portInfo._qtype == QueryInfoType::FULLY) {
+            std::cout << "Baudrate: "   << (portInfo.port.attr_baud_rate != 0) ? portInfo.port.attr_baud_rate : "Undefined" << std::endl;
+            std::cout << "Byte size: "  << (portInfo->byteSize << std::endl;
+            std::cout << "Stop bits: " << portInfo->stopBits << std::endl;
+            std::cout << "Parity: " << portInfo->parity << std::endl;
+        } else if (portInfo._qtype == com_api::QueryInfoType::FULLY) {
+            std::cout << "Port info: failed" << std::endl;
+        }
     }
 
-    std::string InterpretAttribute() {
+    template<typename T>
+    std::string InterpretAttribute(T attribute) {
+        if (std::is_same<T, HW::ConnectionType>::value) {
+            return (attribute == HW::SYNCHRONOUS) ? "Synchronous" : "Asynchronous";
+        }
 
+        return "Undefined";
     }
 
     // void PortInfo(com_api::PortData port, std::string message) {

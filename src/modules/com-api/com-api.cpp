@@ -57,7 +57,7 @@ namespace modules::com_api {
         if (this->hCom != nullptr) {
             return CloseHandle(this->hCom) ? IOCode::QUERY_SUCCESS : IOCode::ERROR_INVALID_VALUE;
         } else {
-            return IOCode::ERROR_INVALID_VALUE;
+            return IOCode::ERROR_INVALID_PORT;
         }
     }
 
@@ -93,11 +93,8 @@ namespace modules::com_api {
                 port.attr_friendly_name = std::string(pathBuff);
 
                 ports.push_back(port);
-        
-                if (port.Close() != IOCode::QUERY_SUCCESS) {
-                    DWORD error = GetLastError();
-                    std::cerr << "Error closing handle: " << error << std::endl;
-                }
+
+                port.Close();
             }
         }
        
@@ -121,49 +118,53 @@ namespace modules::com_api {
         IOCode status = tmpPort.QueryPort(); 
 
         if (status != IOCode::QUERY_SUCCESS) {
-            DWORD error_code = GetLastError();
-            std::cerr << "Ошибка при открытии порта: " << error_code << std::endl;
+            tmpPort.Close();
             return portInfo;
         }
 
         COMSTAT comStat;
         DWORD errors;
-        if (ClearCommError(tmpPort.hCom, &errors, &comStat)) {
-            portInfo.errors = errors;
-            portInfo.cbInQue = comStat.cbInQue;
-            portInfo.cbOutQue = comStat.cbOutQue;
-        }
+
+        WINBOOL getCommError = ClearCommError(tmpPort.hCom, &errors, &comStat);
 
         DCB dcbSerialParams = { 0 };
         dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-        if (GetCommState(tmpPort.hCom, &dcbSerialParams)) {
-            portInfo.baudRate = dcbSerialParams.BaudRate;
-            portInfo.byteSize = dcbSerialParams.ByteSize;
-            portInfo.parity = dcbSerialParams.Parity;
-            portInfo.stopBits = dcbSerialParams.StopBits;
+        
+        WINBOOL getCommState = GetCommState(tmpPort.hCom, &dcbSerialParams);
+
+        if (infoType == QueryInfoType::SHORTLY || infoType == QueryInfoType::FULLY) {   
+            
+            if (getCommError) {
+                portInfo._shortly_errors_errors = errors;
+            }
+
+            if (getCommState) { 
+                portInfo._shortly_state_baudRate  = dcbSerialParams.BaudRate;
+                portInfo._shortly_state_byteSize  = dcbSerialParams.ByteSize;
+                portInfo._shortly_state_stopBits  = dcbSerialParams.StopBits;
+                portInfo._shortly_state_parity    = dcbSerialParams.Parity;
+            }
         }
 
-        // Получение информации о таймаутах порта
-        COMMTIMEOUTS timeouts;
-        if (GetCommTimeouts(tmpPort.hCom, &timeouts)) {
-            portInfo.readIntervalTimeout = timeouts.ReadIntervalTimeout;
-            portInfo.readTotalTimeoutMultiplier = timeouts.ReadTotalTimeoutMultiplier;
-            portInfo.readTotalTimeoutConstant = timeouts.ReadTotalTimeoutConstant;
-            portInfo.writeTotalTimeoutMultiplier = timeouts.WriteTotalTimeoutMultiplier;
-            portInfo.writeTotalTimeoutConstant = timeouts.WriteTotalTimeoutConstant;
-        }
+        if (infoType == QueryInfoType::FULLY) {
+            if (getCommError) {
+                portInfo._fully_errors_cbInQue     = comStat.cbInQue;
+                portInfo._fully_errors_cbOutQue    = comStat.cbOutQue;
+            }
 
-        COMMPROP commProp;
-        if (GetCommTimeouts(tmpPort.hCom, &commProp)) {
-            portInfo.readIntervalTimeout = timeouts.ReadIntervalTimeout;
-            portInfo.readTotalTimeoutMultiplier = timeouts.ReadTotalTimeoutMultiplier;
-            portInfo.readTotalTimeoutConstant = timeouts.ReadTotalTimeoutConstant;
-            portInfo.writeTotalTimeoutMultiplier = timeouts.WriteTotalTimeoutMultiplier;
-            portInfo.writeTotalTimeoutConstant = timeouts.WriteTotalTimeoutConstant;
+            COMMTIMEOUTS timeouts;
+            if (GetCommTimeouts(tmpPort.hCom, &timeouts)) {
+                portInfo._fully_timeouts_readIntervalTimeout            = timeouts.ReadIntervalTimeout;
+                portInfo._fully_timeouts_readTotalTimeoutMultiplier     = timeouts.ReadTotalTimeoutMultiplier;
+                portInfo._fully_timeouts_readTotalTimeoutConstant       = timeouts.ReadTotalTimeoutConstant;
+                portInfo._fully_timeouts_writeTotalTimeoutMultiplier    = timeouts.WriteTotalTimeoutMultiplier;
+                portInfo._fully_timeouts_writeTotalTimeoutConstant      = timeouts.WriteTotalTimeoutConstant;
+            }
         }
 
         tmpPort.Close();
-
+        
+        portInfo._qtype = infoType;
         return portInfo;
     }
 }
